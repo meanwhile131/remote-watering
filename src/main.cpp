@@ -4,12 +4,12 @@
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
 #include <AsyncWebSocket.h>
-// #include <ESP32Servo.h>
+#include <ESP32Servo.h>
 #include <time.h>
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-// Servo water;
+Servo water;
 bool on[9];
 bool fanTurnOff;
 unsigned long turnedOnTime[8];
@@ -19,9 +19,11 @@ bool lastButtonState[8];
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
+void otaHandle(void *);
 
 void setup()
 {
+    water.attach(13, 1000, 2000);
     pinMode(16, OUTPUT);
     pinMode(17, OUTPUT);
     pinMode(18, OUTPUT);
@@ -42,29 +44,28 @@ void setup()
     pinMode(4, OUTPUT);
     WiFi.setHostname("plant-watering");
     WiFi.begin("H1", "qazwsxedc");
-    while (!WiFi.isConnected())
-    {
-    }
+    // while (!WiFi.isConnected())
+    // {
+    // }
     Serial.begin(115200);
-    Serial.println("Connected!");
-    ArduinoOTA.begin();
     ws.onEvent(onEvent);
     server.addHandler(&ws);
     server.begin();
     configTime(14400, 0, "pool.ntp.org");
+    ArduinoOTA.begin();
+    xTaskCreate(otaHandle, "OTA handle", 8192, NULL, 1, NULL);
 }
 
 void loop()
 {
-    ArduinoOTA.handle();
-    buttonPressHandler(26, 3);
-    buttonPressHandler(27, 7);
-    buttonPressHandler(32, 2);
-    buttonPressHandler(33, 6);
-    buttonPressHandler(34, 1);
-    buttonPressHandler(35, 5);
-    buttonPressHandler(36, 0);
-    buttonPressHandler(39, 4);
+    buttonPressHandler(26, 7);
+    buttonPressHandler(27, 6);
+    buttonPressHandler(32, 5);
+    buttonPressHandler(33, 4);
+    buttonPressHandler(34, 3);
+    buttonPressHandler(35, 2);
+    buttonPressHandler(36, 1);
+    buttonPressHandler(39, 0);
     for (size_t i = 0; i < 8; i++)
     {
         if (millis() - turnedOnTime[i] > 15 * 60000 && on[i])
@@ -118,7 +119,7 @@ void setPinState(int pin, bool state)
     }
     else
     {
-        // water.write(state ? 180 : 0);
+        water.write(state ? 180 : 0);
     }
     if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
     {
@@ -165,5 +166,14 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
             if (message.containsKey(String(i)))
                 setPinState(i, message[String(i)]);
         }
+    }
+}
+
+void otaHandle(void *)
+{
+    for (;;)
+    {
+        ArduinoOTA.handle();
+        delay(100);
     }
 }
