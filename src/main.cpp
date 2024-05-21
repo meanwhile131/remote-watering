@@ -20,6 +20,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
 void otaHandle(void *);
+void autoWatering(void *);
 
 void setup()
 {
@@ -54,6 +55,7 @@ void setup()
     configTime(14400, 0, "pool.ntp.org");
     ArduinoOTA.begin();
     xTaskCreate(otaHandle, "OTA handle", 8192, NULL, 1, NULL);
+    xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
 }
 
 void loop()
@@ -68,7 +70,7 @@ void loop()
     buttonPressHandler(39, 0);
     for (size_t i = 0; i < 8; i++)
     {
-        if (millis() - turnedOnTime[i] > 15 * 60000 && on[i])
+        if (millis() - turnedOnTime[i] > 1.1 * 60000 && on[i])
         {
             setPinState(i, false);
         }
@@ -78,12 +80,6 @@ void loop()
         fanTurnOff = false;
         digitalWrite(4, 0);
     }
-    // struct tm timeInfo;
-    // getLocalTime(&timeInfo);
-    // if (timeInfo.tm_hour == 22 && timeInfo.tm_min == 11 && !on[0])
-    // {
-    //     setPinState(0, 1);
-    // }
 }
 
 void buttonPressHandler(int pin, int button)
@@ -174,6 +170,20 @@ void otaHandle(void *)
     for (;;)
     {
         ArduinoOTA.handle();
+        delay(100);
+    }
+}
+
+void autoWatering(void *)
+{
+    for (;;)
+    {
+        struct tm timeInfo;
+        getLocalTime(&timeInfo);
+        if (timeInfo.tm_hour == 13 && timeInfo.tm_min == 6 && !on[2])
+        {
+            setPinState(2, 1);
+        }
         delay(100);
     }
 }
