@@ -55,7 +55,7 @@ void setup()
     configTime(14400, 0, "pool.ntp.org");
     ArduinoOTA.begin();
     xTaskCreate(otaHandle, "OTA handle", 8192, NULL, 1, NULL);
-    xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
+    // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
 }
 
 void loop()
