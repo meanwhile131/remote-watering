@@ -20,6 +20,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
 void autoWatering(void *);
+void control(void *);
 
 void setup()
 {
@@ -49,32 +50,56 @@ void setup()
     server.addHandler(&ws);
     server.begin();
     configTime(14400, 0, "pool.ntp.org");
+
     ArduinoOTA.begin();
     // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
+    xTaskCreate(control, "Control", 2048, NULL, 1, NULL);
 }
 
 void loop()
 {
     ArduinoOTA.handle();
-    buttonPressHandler(26, 7);
-    buttonPressHandler(27, 6);
-    buttonPressHandler(32, 5);
-    buttonPressHandler(33, 4);
-    buttonPressHandler(34, 3);
-    buttonPressHandler(35, 2);
-    buttonPressHandler(36, 1);
-    buttonPressHandler(39, 0);
-    for (size_t i = 0; i < 8; i++)
+}
+
+void control(void *)
+{
+    for (;;)
     {
-        if (millis() - turnedOnTime[i] > 1.1 * 60000 && on[i])
+        buttonPressHandler(26, 7);
+        buttonPressHandler(27, 6);
+        buttonPressHandler(32, 5);
+        buttonPressHandler(33, 4);
+        buttonPressHandler(34, 3);
+        buttonPressHandler(35, 2);
+        buttonPressHandler(36, 1);
+        buttonPressHandler(39, 0);
+        for (size_t i = 0; i < 8; i++)
         {
-            setPinState(i, 0);
+            if (millis() - turnedOnTime[i] > 1.1 * 60000 && on[i])
+            {
+                setPinState(i, 0);
+            }
         }
+        if (millis() - fanOffTime > 60000 && fanTurnOff)
+        {
+            fanTurnOff = false;
+            digitalWrite(4, 0);
+        }
+        delay(100);
     }
-    if (millis() - fanOffTime > 60000 && fanTurnOff)
+}
+
+void autoWatering(void *)
+{
+    for (;;)
     {
-        fanTurnOff = false;
-        digitalWrite(4, 0);
+        struct tm timeInfo;
+        getLocalTime(&timeInfo);
+        if (timeInfo.tm_hour == 13 && timeInfo.tm_min == 6 && !on[2])
+        {
+            setPinState(2, 1);
+        }
+        yield();
     }
 }
 
@@ -158,19 +183,5 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
             if (message.containsKey(String(i)))
                 setPinState(i, message[String(i)]);
         }
-    }
-}
-
-void autoWatering(void *)
-{
-    for (;;)
-    {
-        struct tm timeInfo;
-        getLocalTime(&timeInfo);
-        if (timeInfo.tm_hour == 13 && timeInfo.tm_min == 6 && !on[2])
-        {
-            setPinState(2, 1);
-        }
-        delay(100);
     }
 }
