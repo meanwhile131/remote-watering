@@ -19,7 +19,6 @@ bool lastButtonState[8];
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
-void otaHandle(void *);
 void autoWatering(void *);
 
 void setup()
@@ -45,21 +44,18 @@ void setup()
     pinMode(4, OUTPUT);
     WiFi.setHostname("plant-watering");
     WiFi.begin("H1", "qazwsxedc");
-    // while (!WiFi.isConnected())
-    // {
-    // }
     Serial.begin(115200);
     ws.onEvent(onEvent);
     server.addHandler(&ws);
     server.begin();
     configTime(14400, 0, "pool.ntp.org");
     ArduinoOTA.begin();
-    xTaskCreate(otaHandle, "OTA handle", 8192, NULL, 1, NULL);
     // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
 }
 
 void loop()
 {
+    ArduinoOTA.handle();
     buttonPressHandler(26, 7);
     buttonPressHandler(27, 6);
     buttonPressHandler(32, 5);
@@ -72,7 +68,7 @@ void loop()
     {
         if (millis() - turnedOnTime[i] > 1.1 * 60000 && on[i])
         {
-            setPinState(i, false);
+            setPinState(i, 0);
         }
     }
     if (millis() - fanOffTime > 60000 && fanTurnOff)
@@ -162,15 +158,6 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
             if (message.containsKey(String(i)))
                 setPinState(i, message[String(i)]);
         }
-    }
-}
-
-void otaHandle(void *)
-{
-    for (;;)
-    {
-        ArduinoOTA.handle();
-        delay(100);
     }
 }
 
