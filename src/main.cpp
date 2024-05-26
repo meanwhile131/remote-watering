@@ -11,7 +11,7 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 Servo water;
 bool on[9];
-bool fanTurnOff;
+// bool fanTurnOff;
 unsigned long turnedOnTime[8];
 unsigned long fanOffTime;
 
@@ -24,7 +24,7 @@ void control(void *);
 
 void setup()
 {
-    water.attach(13, 1000, 2000);
+    setPinState(8, 1);
     pinMode(16, OUTPUT);
     pinMode(17, OUTPUT);
     pinMode(18, OUTPUT);
@@ -53,7 +53,7 @@ void setup()
 
     ArduinoOTA.begin();
     // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
-    xTaskCreate(control, "Control", 2048, NULL, 1, NULL);
+    xTaskCreate(control, "Control", 1024, NULL, 0, NULL);
 }
 
 void loop()
@@ -80,11 +80,11 @@ void control(void *)
                 setPinState(i, 0);
             }
         }
-        if (millis() - fanOffTime > 60000 && fanTurnOff)
-        {
-            fanTurnOff = false;
-            digitalWrite(4, 0);
-        }
+        // if (fanTurnOff && millis() - fanOffTime > 0)
+        // {
+        //     fanTurnOff = false;
+        //     digitalWrite(4, 0);
+        // }
         delay(100);
     }
 }
@@ -136,23 +136,30 @@ void setPinState(int pin, bool state)
     }
     else
     {
-        water.write(state ? 180 : 0);
+        water.attach(13);
+        water.write(state ? 0 : 120);
     }
     if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
     {
-        fanTurnOff = false;
+        // fanTurnOff = false;
         digitalWrite(4, 1);
     }
     else
     {
-        fanTurnOff = true;
-        fanOffTime = millis();
+        // fanTurnOff = true;
+        // fanOffTime = millis();
+        digitalWrite(4, 0);
     }
     JsonDocument message;
     message[String(pin)] = state;
     String msg;
     serializeJson(message, msg);
     ws.textAll(msg);
+    if (pin == 8)
+    {
+        delay(3000);
+        water.detach();
+    }
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
