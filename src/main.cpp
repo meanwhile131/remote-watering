@@ -53,7 +53,7 @@ void setup()
 
     ArduinoOTA.begin();
     // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
-    xTaskCreate(control, "Control", 1024, NULL, 0, NULL);
+    xTaskCreate(control, "Control", 4096, NULL, 0, NULL);
 }
 
 void loop()
