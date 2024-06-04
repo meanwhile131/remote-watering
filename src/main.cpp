@@ -6,12 +6,13 @@
 #include <AsyncWebSocket.h>
 #include <ESP32Servo.h>
 #include <time.h>
+#include <EEPROM.h>
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 Servo water;
 bool on[9];
-// bool fanTurnOff;
+bool fanTurnOff;
 unsigned long turnedOnTime[8];
 unsigned long fanOffTime;
 
@@ -20,11 +21,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
 void autoWatering(void *);
-void control(void *);
 
 void setup()
 {
-    setPinState(8, 1);
+    EEPROM.begin(1);
     pinMode(16, OUTPUT);
     pinMode(17, OUTPUT);
     pinMode(18, OUTPUT);
@@ -53,39 +53,31 @@ void setup()
 
     ArduinoOTA.begin();
     // xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
-    xTaskCreate(control, "Control", 4096, NULL, 0, NULL);
+    setPinState(8, EEPROM.readBool(0));
 }
 
 void loop()
 {
     ArduinoOTA.handle();
-}
-
-void control(void *)
-{
-    for (;;)
+    buttonPressHandler(26, 7);
+    buttonPressHandler(27, 6);
+    buttonPressHandler(32, 5);
+    buttonPressHandler(33, 4);
+    buttonPressHandler(34, 3);
+    buttonPressHandler(35, 2);
+    buttonPressHandler(36, 1);
+    buttonPressHandler(39, 0);
+    for (size_t i = 0; i < 8; i++)
     {
-        buttonPressHandler(26, 7);
-        buttonPressHandler(27, 6);
-        buttonPressHandler(32, 5);
-        buttonPressHandler(33, 4);
-        buttonPressHandler(34, 3);
-        buttonPressHandler(35, 2);
-        buttonPressHandler(36, 1);
-        buttonPressHandler(39, 0);
-        for (size_t i = 0; i < 8; i++)
+        if (millis() - turnedOnTime[i] > 65000 && on[i])
         {
-            if (millis() - turnedOnTime[i] > 1.1 * 60000 && on[i])
-            {
-                setPinState(i, 0);
-            }
+            setPinState(i, 0);
         }
-        // if (fanTurnOff && millis() - fanOffTime > 0)
-        // {
-        //     fanTurnOff = false;
-        //     digitalWrite(4, 0);
-        // }
-        delay(100);
+    }
+    if (fanTurnOff && millis() - fanOffTime > 3000)
+    {
+        fanTurnOff = false;
+        digitalWrite(4, 0);
     }
 }
 
@@ -137,18 +129,19 @@ void setPinState(int pin, bool state)
     else
     {
         water.attach(13);
-        water.write(state ? 0 : 120);
+        water.write(state ? 180 : 55);
+        EEPROM.writeBool(0, state);
+        EEPROM.commit();
     }
     if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
     {
-        // fanTurnOff = false;
+        fanTurnOff = false;
         digitalWrite(4, 1);
     }
     else
     {
-        // fanTurnOff = true;
-        // fanOffTime = millis();
-        digitalWrite(4, 0);
+        fanTurnOff = true;
+        fanOffTime = millis();
     }
     JsonDocument message;
     message[String(pin)] = state;
