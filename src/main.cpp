@@ -12,11 +12,12 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 Servo water;
 bool on[9];
-bool fanTurnOff;
+// bool fanTurnOff;
 unsigned long turnedOnTime[8];
-unsigned long fanOffTime;
+// unsigned long fanOffTime;
 
 bool lastButtonState[8];
+void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info);
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 void buttonPressHandler(int pin, int button);
 void setPinState(int pin, bool state);
@@ -45,6 +46,7 @@ void setup()
     pinMode(4, OUTPUT);
     WiFi.setHostname("plant-watering");
     WiFi.begin("H1", "qazwsxedc");
+    WiFi.onEvent(WiFiDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     Serial.begin(115200);
     ws.onEvent(onEvent);
     server.addHandler(&ws);
@@ -74,11 +76,18 @@ void loop()
             setPinState(i, 0);
         }
     }
-    if (fanTurnOff && millis() - fanOffTime > 3000)
-    {
-        fanTurnOff = false;
-        digitalWrite(4, 0);
-    }
+    // if (fanTurnOff && millis() - fanOffTime > 3000)
+    // {
+    //     fanTurnOff = false;
+    //     digitalWrite(4, 0);
+    // }
+}
+
+void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.print("WiFi lost connection: ");
+    Serial.println(info.wifi_sta_disconnected.reason);
+    WiFi.reconnect();
 }
 
 void autoWatering(void *)
@@ -135,13 +144,14 @@ void setPinState(int pin, bool state)
     }
     if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
     {
-        fanTurnOff = false;
+        // fanTurnOff = false;
         digitalWrite(4, 1);
     }
     else
     {
-        fanTurnOff = true;
-        fanOffTime = millis();
+        // fanTurnOff = true;
+        // fanOffTime = millis();
+        digitalWrite(4, 0);
     }
     JsonDocument message;
     message[String(pin)] = state;
