@@ -6,8 +6,7 @@
 #include <pinmanager.h>
 #include <comms.h>
 
-void buttonPressHandler(int pin, int button);
-void setPinState(int pin, bool state);
+void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info);
 void autoWatering(void *);
 
 void setup()
@@ -16,6 +15,7 @@ void setup()
     initPins();
     WiFi.setHostname("plant-watering");
     WiFi.begin("H1", "qazwsxedc");
+    WiFi.onEvent(WiFiDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     Serial.begin(115200);
     configTime(14400, 0, "pool.ntp.org");
     ArduinoOTA.begin();
@@ -34,6 +34,14 @@ void loop()
     buttonPressHandler(35, 2);
     buttonPressHandler(36, 1);
     buttonPressHandler(39, 0);
+    handlePins();
+}
+
+void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.print("WiFi lost connection: ");
+    Serial.println(info.wifi_sta_disconnected.reason);
+    WiFi.reconnect();
 }
 
 void autoWatering(void *)
