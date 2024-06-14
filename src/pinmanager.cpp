@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 
-#define FANTIMER 5000
+// #define FANTIMER 5000
 #define MINUTE 60 * 1000
 #define WATER_TIME 2 * MINUTE
 #define WATER_TIME_8 10 * MINUTE
@@ -115,7 +115,7 @@ void handlePins()
 		}
 	}
 #ifdef FANTIMER
-	if (fanTurnOff && millis() - fanOffTime > 3000)
+	if (fanTurnOff && millis() - fanOffTime > FANTIMER)
 	{
 		fanTurnOff = false;
 		digitalWrite(4, 0);
