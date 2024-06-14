@@ -4,12 +4,18 @@
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 
-bool lastButtonState[8];
-unsigned long turnedOnTime[8];
+#define FANTIMER 5000
+#define MINUTE 60 * 1000
+#define WATER_TIME 2 * MINUTE
+#define WATER_TIME_8 10 * MINUTE
+
+#ifdef FANTIMER
 unsigned long fanOffTime;
 bool fanTurnOff;
+#endif
+bool lastButtonState[8];
+unsigned long turnedOnTime[8];
 bool on[9];
-
 Servo water;
 
 void setPinState(int pin, bool state)
@@ -41,13 +47,19 @@ void setPinState(int pin, bool state)
 	}
 	if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
 	{
+#ifdef FANTIMER
 		fanTurnOff = false;
+#endif
 		digitalWrite(4, 1);
 	}
 	else
 	{
+#ifdef FANTIMER
 		fanTurnOff = true;
 		fanOffTime = millis();
+#else
+		digitalWrite(4, 0);
+#endif
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
@@ -97,14 +109,16 @@ void handlePins()
 {
 	for (size_t i = 0; i < 8; i++)
 	{
-		if (millis() - turnedOnTime[i] > (i < 7 ? 120000 : 600000) && on[i])
+		if (millis() - turnedOnTime[i] > (i < 7 ? WATER_TIME : WATER_TIME_8) && on[i])
 		{
 			setPinState(i, 0);
 		}
 	}
+#ifdef FANTIMER
 	if (fanTurnOff && millis() - fanOffTime > 3000)
 	{
 		fanTurnOff = false;
 		digitalWrite(4, 0);
 	}
+#endif
 }

@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <AsyncWebSocket.h>
 
 void initComms();
