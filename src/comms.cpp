@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <AsyncWebSocket.h>
 #include <ArduinoJson.h>
+#include <AsyncTCP.h>
+#include <AsyncTCP.h>
 #include <pinmanager.h>
 #include <comms.h>
 

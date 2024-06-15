@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <AsyncTCP.h>
 #include <ArduinoOTA.h>
 #include <time.h>
 #include <pinmanager.h>
