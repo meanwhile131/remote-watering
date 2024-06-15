@@ -49,7 +49,6 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void textAll(JsonDocument message)
 {
-
 	String msg;
 	serializeJson(message, msg);
 	ws.textAll(msg);

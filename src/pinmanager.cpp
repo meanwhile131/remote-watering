@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 #include <ArduinoJson.h>
 #include <pinmanager.h>
+#include <comms.h>
 
 // #define FANTIMER 5000
 #define MINUTE 60 * 1000
@@ -63,6 +64,7 @@ void setPinState(int pin, bool state)
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
+	textAll(message);
 	if (pin == 8)
 	{
 		delay(3000);
@@ -107,6 +109,14 @@ void buttonPressHandler(int pin, int button)
 
 void handlePins()
 {
+	buttonPressHandler(26, 7);
+	buttonPressHandler(27, 6);
+	buttonPressHandler(32, 5);
+	buttonPressHandler(33, 4);
+	buttonPressHandler(34, 3);
+	buttonPressHandler(35, 2);
+	buttonPressHandler(36, 1);
+	buttonPressHandler(39, 0);
 	for (size_t i = 0; i < 8; i++)
 	{
 		if (millis() - turnedOnTime[i] > (i < 7 ? WATER_TIME : WATER_TIME_8) && on[i])
