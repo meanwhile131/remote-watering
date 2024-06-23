@@ -16,7 +16,7 @@ bool fanTurnOff;
 #endif
 bool lastButtonState[8];
 unsigned long turnedOnTime[8];
-bool on[9];
+bool on[10];
 Servo water;
 
 void setPinState(int pin, bool state)
@@ -39,11 +39,16 @@ void setPinState(int pin, bool state)
 								: -1,
 					 on[pin]);
 	}
-	else
+	else if (pin == 8)
+	{
+		EEPROM.writeBool(0, state);
+		EEPROM.commit();
+	}
+	else if (pin == 9)
 	{
 		water.attach(13);
 		water.write(state ? 180 : 55);
-		EEPROM.writeBool(0, state);
+		EEPROM.writeBool(1, state);
 		EEPROM.commit();
 	}
 	if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
@@ -65,7 +70,7 @@ void setPinState(int pin, bool state)
 	JsonDocument message;
 	message[String(pin)] = state;
 	textAll(message);
-	if (pin == 8)
+	if (pin == 9)
 	{
 		delay(3000);
 		water.detach();
@@ -74,7 +79,7 @@ void setPinState(int pin, bool state)
 
 void initPins()
 {
-	EEPROM.begin(1);
+	EEPROM.begin(2);
 	pinMode(16, OUTPUT);
 	pinMode(17, OUTPUT);
 	pinMode(18, OUTPUT);
@@ -94,6 +99,7 @@ void initPins()
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
 	setPinState(8, EEPROM.readBool(0));
+	setPinState(9, EEPROM.readBool(1));
 }
 
 void buttonPressHandler(int pin, int button)

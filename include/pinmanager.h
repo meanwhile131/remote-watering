@@ -1,4 +1,4 @@
-extern bool on[9];
+extern bool on[10];
 
 void initPins();
 void setPinState(int pin, bool state);
