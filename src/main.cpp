@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <ArduinoOTA.h>
 #include <pinmanager.h>
 #include <comms.h>
 #include <autowatering.h>
@@ -14,14 +13,13 @@ void setup()
     WiFi.begin("H1", "qazwsxedc");
     WiFi.onEvent(WiFiDisconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     Serial.begin(115200);
-    ArduinoOTA.begin();
     initAutoWatering();
     initComms();
 }
 
 void loop()
 {
-    ArduinoOTA.handle();
+    handleComms();
     handlePins();
 }
 

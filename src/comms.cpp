@@ -2,9 +2,10 @@
 #include <AsyncWebSocket.h>
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
-#include <AsyncTCP.h>
 #include <pinmanager.h>
 #include <comms.h>
+#include <ElegantOTA.h>
+#include <ESPAsyncWebServer.h>
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -12,8 +13,14 @@ AsyncWebSocket ws("/ws");
 void initComms()
 {
 	ws.onEvent(onEvent);
+	ElegantOTA.begin(&server);
 	server.addHandler(&ws);
 	server.begin();
+}
+
+void handleComms()
+{
+	ElegantOTA.loop();
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
