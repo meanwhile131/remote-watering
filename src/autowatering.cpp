@@ -21,25 +21,19 @@ void autoWatering(void *)
         {
             struct tm timeInfo;
             getLocalTime(&timeInfo);
-            if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 0 && !on[0] && !on[1] && !on[2])
-            {
-                setPinState(0, 1);
-                setPinState(1, 1);
-                setPinState(2, 1);
-            }
-            if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 2 && !on[3] && !on[4] && !on[5] && !on[6])
-            {
-                setPinState(3, 1);
-                setPinState(4, 1);
-                setPinState(5, 1);
-                setPinState(6, 1);
-            }
-            if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 4 && !on[7])
-            {
-                setPinState(7, 1);
-            }
-            Serial.println("1");
+            waterIfNeeded(timeInfo, 23, 0, 0);
+            waterIfNeeded(timeInfo, 23, 1, 1);
+            waterIfNeeded(timeInfo, 23, 2, 2);
+            waterIfNeeded(timeInfo, 23, 3, 3);
+            waterIfNeeded(timeInfo, 23, 4, 4);
+            waterIfNeeded(timeInfo, 23, 5, 5);
+            waterIfNeeded(timeInfo, 23, 6, 6);
+            waterIfNeeded(timeInfo, 23, 7, 7);
         }
-        delay(100);
+        delay(1000);
     }
+}
+
+void waterIfNeeded(tm timeInfo, int tm_hour, int tm_min, int pin) {
+    if (timeInfo.tm_hour == tm_hour && timeInfo.tm_min == tm_min && !on[pin]) setPinState(pin, 1);
 }
