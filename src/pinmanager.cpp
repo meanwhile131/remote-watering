@@ -7,7 +7,7 @@
 
 // #define FANTIMER 5000
 #define MINUTE 60 * 1000
-#define WATER_TIME 1 * MINUTE
+#define WATER_TIME 2 * MINUTE
 #define WATER_TIME_8 10 * MINUTE
 
 #ifdef FANTIMER
