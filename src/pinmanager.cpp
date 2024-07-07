@@ -41,6 +41,7 @@ void setPinState(int pin, bool state)
 	}
 	else if (pin == 9)
 	{
+		savedPinState.putBool("water", state);
 		water.attach(13);
 		water.write(state ? 180 : 55);
 	}
@@ -84,6 +85,7 @@ void initPins()
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
 	setPinState(8, savedPinState.getBool("auto"));
+	setPinState(9, savedPinState.getBool("water"));
 }
 
 void buttonPressHandler(int pin, int button)
