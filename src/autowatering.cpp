@@ -21,14 +21,14 @@ void autoWatering(void *)
         {
             struct tm timeInfo;
             getLocalTime(&timeInfo);
-            waterIfNeeded(timeInfo, 10, 35, 0);
-            waterIfNeeded(timeInfo, 10, 37, 1);
-            waterIfNeeded(timeInfo, 10, 39, 2);
-            waterIfNeeded(timeInfo, 10, 41, 3);
-            waterIfNeeded(timeInfo, 10, 43, 4);
-            waterIfNeeded(timeInfo, 10, 45, 5);
-            waterIfNeeded(timeInfo, 10, 47, 6);
-            waterIfNeeded(timeInfo, 10, 49, 7);
+            waterIfNeeded(timeInfo, 23, 0, 0);
+            waterIfNeeded(timeInfo, 23, 2, 1);
+            waterIfNeeded(timeInfo, 23, 4, 2);
+            waterIfNeeded(timeInfo, 23, 6, 3);
+            waterIfNeeded(timeInfo, 23, 8, 4);
+            waterIfNeeded(timeInfo, 23, 10, 5);
+            waterIfNeeded(timeInfo, 23, 12, 6);
+            waterIfNeeded(timeInfo, 23, 14, 7);
         }
         delay(1000);
     }
