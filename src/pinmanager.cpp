@@ -3,7 +3,6 @@
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 #include <comms.h>
-#include <Preferences.h>
 
 #define MINUTE 60 * 1000
 #define WATER_TIME 2 * MINUTE
