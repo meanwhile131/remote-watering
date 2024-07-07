@@ -1,5 +1,4 @@
 #include <Arduino.h>
-// #include "time.h"
 #include <pinmanager.h>
 #include <autowatering.h>
 
@@ -13,7 +12,7 @@ void initAutoWatering()
 #endif
 }
 
-void autoWatering(void *param)
+void autoWatering(void *)
 {
     for (;;)
     {
