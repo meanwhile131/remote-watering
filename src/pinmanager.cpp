@@ -1,23 +1,19 @@
 #include <Arduino.h>
 #include <ESP32Servo.h>
-#include <EEPROM.h>
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 #include <comms.h>
+#include <Preferences.h>
 
-// #define FANTIMER 5000
 #define MINUTE 60 * 1000
 #define WATER_TIME 2 * MINUTE
 #define WATER_TIME_8 10 * MINUTE
 
-#ifdef FANTIMER
-unsigned long fanOffTime;
-bool fanTurnOff;
-#endif
 bool lastButtonState[8];
 unsigned long turnedOnTime[8];
 bool on[10];
 Servo water;
+Preferences savedPinState;
 
 void setPinState(int pin, bool state)
 {
@@ -41,31 +37,20 @@ void setPinState(int pin, bool state)
 	}
 	else if (pin == 8)
 	{
-		EEPROM.writeBool(0, state);
-		EEPROM.commit();
+		savedPinState.putBool("auto", state);
 	}
 	else if (pin == 9)
 	{
 		water.attach(13);
 		water.write(state ? 180 : 55);
-		EEPROM.writeBool(1, state);
-		EEPROM.commit();
 	}
 	if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
 	{
-#ifdef FANTIMER
-		fanTurnOff = false;
-#endif
 		digitalWrite(4, 1);
 	}
 	else
 	{
-#ifdef FANTIMER
-		fanTurnOff = true;
-		fanOffTime = millis();
-#else
 		digitalWrite(4, 0);
-#endif
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
@@ -79,7 +64,7 @@ void setPinState(int pin, bool state)
 
 void initPins()
 {
-	EEPROM.begin(2);
+	savedPinState.begin("state");
 	pinMode(16, OUTPUT);
 	pinMode(17, OUTPUT);
 	pinMode(18, OUTPUT);
@@ -98,8 +83,8 @@ void initPins()
 	pinMode(36, INPUT);
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
-	setPinState(8, EEPROM.readBool(0));
-	setPinState(9, EEPROM.readBool(1));
+	setPinState(8, savedPinState.getBool("auto"));
+	// setPinState(9, EEPROM.readBool(1));
 }
 
 void buttonPressHandler(int pin, int button)
@@ -130,11 +115,4 @@ void handlePins()
 			setPinState(i, 0);
 		}
 	}
-#ifdef FANTIMER
-	if (fanTurnOff && millis() - fanOffTime > FANTIMER)
-	{
-		fanTurnOff = false;
-		digitalWrite(4, 0);
-	}
-#endif
 }
