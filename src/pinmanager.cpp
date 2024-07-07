@@ -84,7 +84,6 @@ void initPins()
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
 	setPinState(8, savedPinState.getBool("auto"));
-	// setPinState(9, EEPROM.readBool(1));
 }
 
 void buttonPressHandler(int pin, int button)
