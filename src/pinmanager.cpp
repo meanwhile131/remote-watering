@@ -4,6 +4,7 @@
 #include <pinmanager.h>
 #include <comms.h>
 #include <Preferences.h>
+#include <nvs_flash.h>
 
 #define MINUTE 60 * 1000
 #define WATER_TIME 2 * MINUTE
@@ -64,6 +65,7 @@ void setPinState(int pin, bool state)
 
 void initPins()
 {
+	nvs_flash_init();
 	savedPinState.begin("state");
 	pinMode(16, OUTPUT);
 	pinMode(17, OUTPUT);
