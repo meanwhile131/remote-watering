@@ -30,7 +30,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 		Serial.println("Client connected!");
 		JsonDocument message;
-		for (size_t i = 0; i < 10; i++)
+		for (size_t i = 0; i < 9; i++)
 		{
 			message[String(i)] = on[i];
 		}
@@ -46,7 +46,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 	{
 		JsonDocument message;
 		deserializeJson(message, (char *)m);
-		for (size_t i = 0; i < 10; i++)
+		for (size_t i = 0; i < 9; i++)
 		{
 			if (message.containsKey(String(i)))
 				setPinState(i, message[String(i)]);

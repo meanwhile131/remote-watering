@@ -39,27 +39,31 @@ void setPinState(int pin, bool state)
 	{
 		savedPinState.putBool("auto", state);
 	}
-	else if (pin == 9)
-	{
-		water.attach(13);
-		water.write(state ? 180 : 55);
-	}
 	if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
 	{
 		digitalWrite(4, 1);
+		xTaskCreate(
+			setWaterControlState,
+			"Control water",
+			1000,
+			(void *)1,
+			1,
+			NULL);
 	}
 	else
 	{
+		xTaskCreate(
+			setWaterControlState,
+			"Control water",
+			1000,
+			(void *)0,
+			1,
+			NULL);
 		digitalWrite(4, 0);
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
 	textAll(message);
-	if (pin == 9)
-	{
-		delay(3000);
-		water.detach();
-	}
 }
 
 void initPins()
@@ -84,7 +88,6 @@ void initPins()
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
 	setPinState(8, savedPinState.getBool("auto"));
-	// setPinState(9, EEPROM.readBool(1));
 }
 
 void buttonPressHandler(int pin, int button)
@@ -115,4 +118,18 @@ void handlePins()
 			setPinState(i, 0);
 		}
 	}
+}
+
+void setWaterControlState(void *parameter)
+{
+	if ((bool)parameter == on[9])
+	{
+		vTaskDelete(NULL);
+	}
+	on[9] = (bool)parameter;
+	water.attach(13);
+	water.write((bool)parameter ? 180 : 55);
+	delay(3000);
+	water.detach();
+	vTaskDelete(NULL);
 }
