@@ -18,14 +18,6 @@ extern "C" void app_main()
         .sta = {
             {.ssid = "H1"},
             {.password = "qazwsxedc"},
-            /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
-             * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
-             * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
-             * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
-             */
-            // .threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
-            // .sae_pwe_h2e = WPA3_SAE_PWE_HUNT_AND_PECK,
-            // .sae_h2e_identifier = "",
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
