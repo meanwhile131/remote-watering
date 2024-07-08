@@ -2,14 +2,10 @@
 #include <pinmanager.h>
 #include <autowatering.h>
 
-#define ENABLE
-
 void initAutoWatering()
 {
-#ifdef ENABLE
     configTime(14400, 0, "pool.ntp.org");
     xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
-#endif
 }
 
 void autoWatering(void *)
