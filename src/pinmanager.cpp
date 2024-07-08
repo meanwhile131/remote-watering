@@ -74,7 +74,6 @@ void initPins()
 	pinMode(22, OUTPUT);
 	pinMode(23, OUTPUT);
 	pinMode(25, OUTPUT);
-	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(26, INPUT_PULLDOWN);
 	pinMode(27, INPUT_PULLDOWN);
 	pinMode(32, INPUT_PULLDOWN);
