@@ -21,7 +21,7 @@ void loop()
 {
     handleComms();
     handlePins();
-    handeAutoWatering();
+    handleAutoWatering();
     delay(100);
 }
 
