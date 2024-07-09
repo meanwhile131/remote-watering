@@ -88,17 +88,21 @@ void setPinState(int pin, bool state)
 	else if (pin == 9)
 	{
 		savedPinState.putBool("water", state);
-		water.write(state ? 180 : 55);
+		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state, tskIDLE_PRIORITY, NULL);
 	}
 	digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 	JsonDocument message;
 	message[String(pin)] = state;
 	textAll(message);
-	if (pin == 9)
-	{
-		delay(3000);
-		water.release();
-	}
+}
+
+void setWaterState(void *state)
+{
+	on[9] = (bool)state;
+	water.write((bool)state ? 180 : 55);
+	delay(3000);
+	water.release();
+	vTaskDelete(NULL);
 }
 
 void buttonPressHandler(int pin, int button)

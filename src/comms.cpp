@@ -4,7 +4,6 @@
 #include <AsyncTCP.h>
 #include <pinmanager.h>
 #include <comms.h>
-#include <ElegantOTA.h>
 #include <ESPAsyncWebServer.h>
 
 AsyncWebServer server(80);
@@ -13,14 +12,9 @@ AsyncWebSocket ws("/ws");
 void runComms(void *)
 {
 	ws.onEvent(onEvent);
-	ElegantOTA.begin(&server);
 	server.addHandler(&ws);
 	server.begin();
-	for (;;)
-	{
-		ElegantOTA.loop();
-		delay(100);
-	}
+	vTaskDelete(NULL);
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
