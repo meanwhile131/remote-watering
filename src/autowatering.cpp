@@ -3,33 +3,24 @@
 #include <pinmanager.h>
 #include <autowatering.h>
 
-#define ENABLE
-
 void initAutoWatering()
 {
-#ifdef ENABLE
     configTime(14400, 0, "pool.ntp.org");
-    xTaskCreate(autoWatering, "Autowatering", 2048, NULL, 1, NULL);
-#endif
 }
 
-void autoWatering(void *)
+void handleAutoWatering()
 {
-    for (;;)
+    if (on[8])
     {
-        if (on[8])
-        {
-            struct tm timeInfo;
-            getLocalTime(&timeInfo);
-            waterIfNeeded(timeInfo, 23, 0, 0);
-            waterIfNeeded(timeInfo, 23, 2, 2);
-            waterIfNeeded(timeInfo, 23, 4, 3);
-            waterIfNeeded(timeInfo, 23, 6, 4);
-            waterIfNeeded(timeInfo, 23, 8, 5);
-            waterIfNeeded(timeInfo, 23, 10, 6);
-            waterIfNeeded(timeInfo, 23, 12, 1);
-        }
-        delay(1000);
+        struct tm timeInfo;
+        getLocalTime(&timeInfo);
+        waterIfNeeded(timeInfo, 23, 0, 0);
+        waterIfNeeded(timeInfo, 23, 2, 2);
+        waterIfNeeded(timeInfo, 23, 4, 3);
+        waterIfNeeded(timeInfo, 23, 6, 4);
+        waterIfNeeded(timeInfo, 23, 8, 5);
+        waterIfNeeded(timeInfo, 23, 10, 6);
+        waterIfNeeded(timeInfo, 23, 12, 1);
     }
 }
 

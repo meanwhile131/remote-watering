@@ -111,7 +111,7 @@ void handlePins()
 	buttonPressHandler(39, 0);
 	for (size_t i = 0; i < 8; i++)
 	{
-		if (millis() - turnedOnTime[i] > (i != 1 ? WATER_TIME : WATER_TIME_8) && on[i])
+		if ((millis() - turnedOnTime[i]) > (i != 1 ? WATER_TIME : WATER_TIME_8) && on[i])
 		{
 			setPinState(i, 0);
 		}

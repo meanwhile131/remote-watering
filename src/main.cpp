@@ -21,6 +21,8 @@ void loop()
 {
     handleComms();
     handlePins();
+    handeAutoWatering();
+    delay(100);
 }
 
 void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
