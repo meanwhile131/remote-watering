@@ -42,7 +42,6 @@ void setPinState(int pin, bool state)
 	else if (pin == 9)
 	{
 		savedPinState.putBool("water", state);
-		water.attach(13);
 		water.write(state ? 180 : 55);
 	}
 	if (on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7])
@@ -59,7 +58,7 @@ void setPinState(int pin, bool state)
 	if (pin == 9)
 	{
 		delay(3000);
-		water.detach();
+		water.release();
 	}
 }
 
@@ -84,6 +83,8 @@ void initPins()
 	pinMode(39, INPUT);
 	pinMode(4, OUTPUT);
 	setPinState(8, savedPinState.getBool("auto"));
+	water.attach(13);
+	water.release();
 	setPinState(9, savedPinState.getBool("water"));
 }
 
@@ -110,7 +111,7 @@ void handlePins()
 	buttonPressHandler(39, 0);
 	for (size_t i = 0; i < 8; i++)
 	{
-		if (millis() - turnedOnTime[i] > (i < 7 ? WATER_TIME : WATER_TIME_8) && on[i])
+		if (millis() - turnedOnTime[i] > (i != 1 ? WATER_TIME : WATER_TIME_8) && on[i])
 		{
 			setPinState(i, 0);
 		}
