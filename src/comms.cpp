@@ -18,10 +18,11 @@ void runComms()
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
 {
+	printf("Comms event happened\n");
 	if (type == WS_EVT_CONNECT)
 	{
 
-		Serial.println("Client connected!");
+		printf("Client connected!\n");
 		JsonDocument message;
 		for (size_t i = 0; i < 10; i++)
 		{
@@ -33,7 +34,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 	}
 	else if (type == WS_EVT_DISCONNECT)
 	{
-		Serial.println("Client disconnected!");
+		printf("Client disconnected!n");
 	}
 	else if (type == WS_EVT_DATA)
 	{

@@ -11,21 +11,25 @@ void runAutoWatering(void *)
         {
             struct tm timeInfo;
             getLocalTime(&timeInfo);
-            waterIfNeeded(timeInfo, 23, 0, 0);
-            waterIfNeeded(timeInfo, 23, 2, 1);
-            waterIfNeeded(timeInfo, 23, 4, 2);
-            waterIfNeeded(timeInfo, 23, 6, 3);
-            waterIfNeeded(timeInfo, 23, 8, 4);
-            waterIfNeeded(timeInfo, 23, 10, 5);
-            waterIfNeeded(timeInfo, 23, 12, 6);
-            waterIfNeeded(timeInfo, 23, 14, 7);
+            if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 0)
+            {
+                setPinState(0, 1);
+                delay(WATER_TIME);
+                setPinState(1, 1);
+                delay(WATER_TIME);
+                setPinState(2, 1);
+                delay(WATER_TIME);
+                setPinState(3, 1);
+                delay(WATER_TIME);
+                setPinState(4, 1);
+                delay(WATER_TIME);
+                setPinState(5, 1);
+                delay(WATER_TIME);
+                setPinState(6, 1);
+                delay(WATER_TIME);
+                setPinState(7, 1);
+            }
         }
         delay(1000);
     }
-}
-
-void waterIfNeeded(tm timeInfo, int tm_hour, int tm_min, int pin)
-{
-    if (timeInfo.tm_hour == tm_hour && timeInfo.tm_min == tm_min && !on[pin])
-        setPinState(pin, 1);
 }

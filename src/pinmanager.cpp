@@ -6,12 +6,7 @@
 #include <Preferences.h>
 #include <nvs_flash.h>
 
-#define MINUTE 60 * 1000
-#define WATER_TIME 2 * MINUTE
-#define WATER_TIME_8 10 * MINUTE
-
 bool lastButtonState[8];
-unsigned long turnedOnTime[8];
 bool on[10];
 Servo water;
 Preferences savedPinState;
@@ -40,6 +35,7 @@ void runPins(void *)
 	setPinState(8, savedPinState.getBool("auto"));
 	water.attach(13);
 	setPinState(9, savedPinState.getBool("water"));
+	printf("Pin init done");
 	for (;;)
 	{
 		buttonPressHandler(26, 7);
@@ -50,25 +46,20 @@ void runPins(void *)
 		buttonPressHandler(35, 2);
 		buttonPressHandler(36, 1);
 		buttonPressHandler(39, 0);
-		for (size_t i = 0; i < 8; i++)
-		{
-			if (millis() - turnedOnTime[i] > (i < 7 ? WATER_TIME : WATER_TIME_8) && on[i])
-			{
-				setPinState(i, 0);
-			}
-		}
 		delay(100);
 	}
 }
 
 void setPinState(int pin, bool state)
 {
+	printf("Setting pin state...\n");
 	on[pin] = state;
 	if (pin < 8)
 	{
 		if (state)
 		{
-			turnedOnTime[pin] = millis();
+			int *pin_on_heap = new int(pin);
+			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin_on_heap, tskIDLE_PRIORITY, NULL);
 		}
 		digitalWrite(pin == 0	? 17
 					 : pin == 1 ? 25
@@ -88,12 +79,21 @@ void setPinState(int pin, bool state)
 	else if (pin == 9)
 	{
 		savedPinState.putBool("water", state);
-		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state, tskIDLE_PRIORITY, NULL);
+		bool *state_on_heap = new bool(state);
+		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state_on_heap, tskIDLE_PRIORITY, NULL);
 	}
 	digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 	JsonDocument message;
 	message[String(pin)] = state;
 	textAll(message);
+}
+
+void turnOffAfterTime(void *pin)
+{
+	delay((int)pin < 7 ? WATER_TIME : WATER_TIME_8);
+	setPinState((int)pin, 0);
+	free(pin);
+	vTaskDelete(NULL);
 }
 
 void setWaterState(void *state)
@@ -102,6 +102,7 @@ void setWaterState(void *state)
 	water.write((bool)state ? 180 : 55);
 	delay(3000);
 	water.release();
+	free(state);
 	vTaskDelete(NULL);
 }
 
