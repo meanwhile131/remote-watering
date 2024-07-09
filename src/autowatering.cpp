@@ -15,29 +15,19 @@ void runAutoWatering(void *)
             {
                 setPinState(0, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
+                setPinState(1, 1);
+                delay(WATER_TIME);
                 setPinState(2, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
                 setPinState(3, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
                 setPinState(4, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
                 setPinState(5, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
                 setPinState(6, 1);
                 delay(WATER_TIME);
-                if (!on[8])
-                    continue;
-                setPinState(1, 1);
+                setPinState(7, 1);
             }
         }
         delay(1000);
