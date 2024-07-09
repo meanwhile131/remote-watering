@@ -1,4 +1,3 @@
-// #include <Arduino.h>
 #include <pinmanager.h>
 #include <comms.h>
 #include <autowatering.h>
@@ -17,7 +16,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 
 extern "C" void app_main()
 {
-    initPins();
+
+    xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, 1, NULL);
     esp_netif_init();
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
@@ -38,12 +38,6 @@ extern "C" void app_main()
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
     esp_wifi_connect();
-    initAutoWatering();
-    initComms();
-    for (;;)
-    {
-        handleComms();
-        handlePins();
-        delay(50);
-    }
+    xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(runComms, "Comms", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY, NULL);
 }

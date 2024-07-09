@@ -10,17 +10,17 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-void initComms()
+void runComms(void *)
 {
 	ws.onEvent(onEvent);
 	ElegantOTA.begin(&server);
 	server.addHandler(&ws);
 	server.begin();
-}
-
-void handleComms()
-{
-	ElegantOTA.loop();
+	for (;;)
+	{
+		ElegantOTA.loop();
+		delay(100);
+	}
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
