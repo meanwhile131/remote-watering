@@ -50,6 +50,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void textAll(JsonDocument message)
 {
+	printf("Sending stuff...\n");
 	String msg;
 	serializeJson(message, msg);
 	ws.textAll(msg);

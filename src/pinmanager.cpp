@@ -58,8 +58,8 @@ void setPinState(int pin, bool state)
 	{
 		if (state)
 		{
-			int *pin_on_heap = new int(pin);
-			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin_on_heap, tskIDLE_PRIORITY, NULL);
+			// int *pin_on_heap = new int(pin);
+			// xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin_on_heap, tskIDLE_PRIORITY, NULL);
 		}
 		digitalWrite(pin == 0	? 17
 					 : pin == 1 ? 25
@@ -71,18 +71,18 @@ void setPinState(int pin, bool state)
 					 : pin == 7 ? 16
 								: -1,
 					 on[pin]);
+		digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 	}
 	else if (pin == 8)
 	{
 		savedPinState.putBool("auto", state);
 	}
-	else if (pin == 9)
-	{
-		savedPinState.putBool("water", state);
-		bool *state_on_heap = new bool(state);
-		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state_on_heap, tskIDLE_PRIORITY, NULL);
-	}
-	digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
+	// else if (pin == 9)
+	// {
+	// 	savedPinState.putBool("water", state);
+	// 	// bool *state_on_heap = new bool(state);
+	// 	// xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state_on_heap, tskIDLE_PRIORITY, NULL);
+	// }
 	JsonDocument message;
 	message[String(pin)] = state;
 	textAll(message);
