@@ -27,8 +27,7 @@ void autoWatering(void *)
             waterIfNeeded(timeInfo, 23, 6, 4);
             waterIfNeeded(timeInfo, 23, 8, 5);
             waterIfNeeded(timeInfo, 23, 10, 6);
-            waterIfNeeded(timeInfo, 23, 12, 7);
-            waterIfNeeded(timeInfo, 23, 14, 1);
+            waterIfNeeded(timeInfo, 23, 12, 1);
         }
         delay(1000);
     }
