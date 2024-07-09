@@ -68,7 +68,7 @@ void setPinState(int pin, bool state)
 					 on[pin]);
 		digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 		if (state)
-			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY, NULL);
+			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY + 1, NULL);
 	}
 	else if (pin == 8)
 	{
@@ -77,7 +77,8 @@ void setPinState(int pin, bool state)
 	else if (pin == 9)
 	{
 		savedPinState.putBool("water", state);
-		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state, tskIDLE_PRIORITY, NULL);
+		static bool state_static = state;
+		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state_static, tskIDLE_PRIORITY + 1, NULL);
 	}
 	JsonDocument message;
 	message[String(pin)] = state;

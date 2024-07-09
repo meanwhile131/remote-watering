@@ -17,7 +17,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 extern "C" void app_main()
 {
 
-    xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, 1, NULL);
+    xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
     esp_netif_init();
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
@@ -38,6 +38,6 @@ extern "C" void app_main()
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
     esp_wifi_connect();
-    xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY, NULL);
+    xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
     runComms();
 }
