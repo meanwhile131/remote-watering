@@ -9,12 +9,11 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-void runComms(void *)
+void runComms()
 {
 	ws.onEvent(onEvent);
 	server.addHandler(&ws);
 	server.begin();
-	vTaskDelete(NULL);
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)

@@ -39,5 +39,5 @@ extern "C" void app_main()
     esp_wifi_start();
     esp_wifi_connect();
     xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY, NULL);
-    xTaskCreate(runComms, "Comms", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY, NULL);
+    runComms();
 }
