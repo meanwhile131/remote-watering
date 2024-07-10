@@ -69,8 +69,7 @@ void setPinState(int pin, bool state)
 		digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 		if (state)
 		{
-			static int pin_static = pin;
-			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin_static, tskIDLE_PRIORITY + 1, NULL);
+			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY + 1, NULL);
 		}
 	}
 	else if (pin == 8)
@@ -80,8 +79,7 @@ void setPinState(int pin, bool state)
 	else if (pin == 9)
 	{
 		savedPinState.putBool("water", state);
-		static bool state_static = state;
-		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state_static, tskIDLE_PRIORITY + 1, NULL);
+		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state, tskIDLE_PRIORITY + 1, NULL);
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
@@ -90,7 +88,7 @@ void setPinState(int pin, bool state)
 
 void turnOffAfterTime(void *pin)
 {
-	delay((int)pin < 7 ? WATER_TIME : WATER_TIME_8);
+	delay((int)pin != 1 ? WATER_TIME : WATER_TIME_8);
 	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
@@ -101,7 +99,6 @@ void setWaterState(void *state)
 	water.write((bool)state ? 180 : 55);
 	delay(3000);
 	water.release();
-	free(state);
 	vTaskDelete(NULL);
 }
 
