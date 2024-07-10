@@ -4,6 +4,9 @@
 #include <esp_wifi.h>
 #include <esp_netif.h>
 #include <Print.h>
+#include <nvs_flash.h>
+
+static const char *TAG = "Main";
 
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
@@ -16,13 +19,16 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 
 extern "C" void app_main()
 {
+    nvs_flash_init();
+    ESP_LOGI(TAG, "Starting pin manager...");
     xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
+    ESP_LOGI(TAG, "Setting up WiFi...");
+    esp_wifi_set_storage(WIFI_STORAGE_RAM);
     esp_netif_init();
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
     wifi_init_config_t init_wifi_config = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&init_wifi_config);
-    esp_wifi_set_storage(WIFI_STORAGE_RAM);
     wifi_config_t wifi_config = {
         .sta = {
             {.ssid = "H1"},
@@ -37,6 +43,8 @@ extern "C" void app_main()
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
     esp_wifi_connect();
+    ESP_LOGI(TAG, "Starting autowatering...");
     xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
+    ESP_LOGI(TAG, "Starting comms...");
     runComms();
 }

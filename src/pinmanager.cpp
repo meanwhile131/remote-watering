@@ -6,6 +6,8 @@
 #include <Preferences.h>
 #include <nvs_flash.h>
 
+static const char *TAG = "Pin manager";
+
 bool lastButtonState[8];
 bool on[10];
 Servo water;
@@ -13,8 +15,9 @@ Preferences savedPinState;
 
 void runPins(void *)
 {
-	nvs_flash_init();
+	ESP_LOGI(TAG, "Setting up flash memory...");
 	savedPinState.begin("state");
+	ESP_LOGI(TAG, "Setting up pins...");
 	pinMode(16, OUTPUT);
 	pinMode(17, OUTPUT);
 	pinMode(18, OUTPUT);
@@ -35,7 +38,7 @@ void runPins(void *)
 	setPinState(8, savedPinState.getBool("auto"));
 	water.attach(13);
 	setPinState(9, savedPinState.getBool("water"));
-	printf("Pin init done");
+	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
 	for (;;)
 	{
 		buttonPressHandler(26, 7);
@@ -52,7 +55,7 @@ void runPins(void *)
 
 void setPinState(int pin, bool state)
 {
-	printf("Setting pin state...\n");
+	ESP_LOGI(TAG, "Setting state of pin %i to %d", pin, state);
 	on[pin] = state;
 	if (pin < 8)
 	{
@@ -88,7 +91,7 @@ void setPinState(int pin, bool state)
 
 void turnOffAfterTime(void *pin)
 {
-	delay((int)pin != 1 ? WATER_TIME : WATER_TIME_8);
+	delay((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG);
 	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
@@ -96,7 +99,7 @@ void turnOffAfterTime(void *pin)
 void setWaterState(void *state)
 {
 	on[9] = (bool)state;
-	water.write((bool)state ? 180 : 55);
+	water.write((bool)state ? 180 : 40);
 	delay(3000);
 	water.release();
 	vTaskDelete(NULL);

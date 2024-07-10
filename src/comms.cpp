@@ -6,23 +6,26 @@
 #include <comms.h>
 #include <ESPAsyncWebServer.h>
 
+static const char *TAG = "Comms";
+
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 void runComms()
 {
+	ESP_LOGI(TAG, "Initializing web server...");
 	ws.onEvent(onEvent);
 	server.addHandler(&ws);
 	server.begin();
+	ESP_LOGI(TAG, "Web server init done!");
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *m, size_t len)
 {
-	printf("Comms event happened\n");
 	if (type == WS_EVT_CONNECT)
 	{
 
-		printf("Client connected!\n");
+		ESP_LOGI(TAG, "Client connected!");
 		JsonDocument message;
 		for (size_t i = 0; i < 10; i++)
 		{
@@ -34,7 +37,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 	}
 	else if (type == WS_EVT_DISCONNECT)
 	{
-		printf("Client disconnected!n");
+		ESP_LOGI(TAG, "Client disconnected!");
 	}
 	else if (type == WS_EVT_DATA)
 	{
@@ -50,8 +53,8 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void textAll(JsonDocument message)
 {
-	printf("Sending stuff...\n");
 	String msg;
 	serializeJson(message, msg);
+	ESP_LOGI(TAG, "Sending %s...\n", msg);
 	ws.textAll(msg);
 }

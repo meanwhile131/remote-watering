@@ -2,9 +2,13 @@
 #include <pinmanager.h>
 #include <autowatering.h>
 
+static const char *TAG = "Autowatering";
+
 void runAutoWatering(void *)
 {
+    ESP_LOGI(TAG, "Setting up NTP...");
     configTime(14400, 0, "pool.ntp.org");
+    ESP_LOGI(TAG, "NTP setup done! Starting loop...");
     for (;;)
     {
         if (on[8])
@@ -15,19 +19,30 @@ void runAutoWatering(void *)
             {
                 setPinState(0, 1);
                 delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(2, 1);
                 delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(3, 1);
                 delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(4, 1);
                 delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(5, 1);
                 delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(6, 1);
                 delay(WATER_TIME);
-                setPinState(7, 1);
-                delay(WATER_TIME);
+                if (!on[8])
+                    continue;
                 setPinState(1, 1);
+                delay(WATER_TIME_LONG);
             }
         }
         delay(1000);
