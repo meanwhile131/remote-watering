@@ -4,6 +4,7 @@
 #include <pinmanager.h>
 #include <comms.h>
 #include <Preferences.h>
+#include <esp_task.h>
 #include <nvs_flash.h>
 
 static const char *TAG = "Pin manager";

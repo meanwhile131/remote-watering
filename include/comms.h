@@ -1,6 +1,7 @@
-#include <AsyncWebSocket.h>
 #include <ArduinoJson.h>
+#include <esp_http_server.h>
 
 void runComms();
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+esp_err_t websocket_handler(httpd_req_t *req);
+esp_err_t ota_post_handler(httpd_req_t *req);
 void textAll(JsonDocument message);
