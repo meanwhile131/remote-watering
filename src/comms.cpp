@@ -103,7 +103,7 @@ esp_err_t ota_handler(httpd_req_t *req)
 	httpd_resp_set_status(req, HTTPD_500);
 
 	int ret, remaining = req->content_len;
-	esp_ota_handle_t update_handle = NULL;
+	esp_ota_handle_t update_handle = 0;
 	const esp_partition_t *update_partition = esp_ota_get_next_update_partition(NULL);
 
 	char response[64];

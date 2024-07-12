@@ -10,6 +10,7 @@ static const char *TAG = "Pin manager";
 
 bool lastButtonState[8];
 bool on[10];
+TaskHandle_t turnOffTaskHandles[8];
 Servo water;
 Preferences savedPinState;
 
@@ -66,7 +67,11 @@ void setPinState(int pin, bool state)
 		gpio_set_level(GPIO_NUM_4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 		if (state)
 		{
-			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY + 1, NULL);
+			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY + 1, &turnOffTaskHandles[pin]);
+		}
+		else if (turnOffTaskHandles[pin] != NULL)
+		{
+			vTaskDelete(turnOffTaskHandles[pin]);
 		}
 	}
 	else if (pin == 8)
@@ -86,8 +91,7 @@ void setPinState(int pin, bool state)
 void turnOffAfterTime(void *pin)
 {
 	vTaskDelay(((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG) / portTICK_PERIOD_MS);
-	if (on[(int)pin])
-		setPinState((int)pin, 0);
+	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
 
