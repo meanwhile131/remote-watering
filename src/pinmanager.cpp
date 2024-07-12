@@ -50,7 +50,7 @@ void runPins(void *)
 		buttonPressHandler(35, 2);
 		buttonPressHandler(36, 1);
 		buttonPressHandler(39, 0);
-		delay(100);
+		vTaskDelay(100 / portTICK_PERIOD_MS);
 	}
 }
 
@@ -92,7 +92,7 @@ void setPinState(int pin, bool state)
 
 void turnOffAfterTime(void *pin)
 {
-	delay((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG);
+	vTaskDelay(((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG) / portTICK_PERIOD_MS);
 	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
@@ -101,7 +101,7 @@ void setWaterState(void *state)
 {
 	on[9] = (bool)state;
 	water.write((bool)state ? 180 : 40);
-	delay(3000);
+	vTaskDelay(3000 / portTICK_PERIOD_MS);
 	water.release();
 	vTaskDelete(NULL);
 }

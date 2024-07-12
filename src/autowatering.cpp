@@ -18,33 +18,33 @@ void runAutoWatering(void *)
             if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 0)
             {
                 setPinState(0, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(2, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(3, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(4, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(5, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(6, 1);
-                delay(WATER_TIME);
+                vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
                     continue;
                 setPinState(1, 1);
-                delay(WATER_TIME_LONG);
+                vTaskDelay(WATER_TIME_LONG / portTICK_PERIOD_MS);
             }
         }
-        delay(1000);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
