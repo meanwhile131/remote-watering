@@ -9,4 +9,4 @@ void turnOffAfterTime(void *pin);
 void setPinState(int pin, bool state);
 void buttonPressHandler(gpio_num_t pin, int button);
 void runPins(void *);
-void setWaterState(void *state);
+void releaseWaterServo(void *);

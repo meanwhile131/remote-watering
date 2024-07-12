@@ -22,8 +22,8 @@ void runAutoWatering(void *)
             struct tm timeinfo;
             time(&now);
             localtime_r(&now, &timeinfo);
-            if (timeinfo.tm_hour == 23 && timeinfo.tm_min == 0)
-            {
+            // if (timeinfo.tm_hour == 23 && timeinfo.tm_min == 0)
+            // {
                 setPinState(0, 1);
                 vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);
                 if (!on[8])
@@ -50,7 +50,7 @@ void runAutoWatering(void *)
                     continue;
                 setPinState(1, 1);
                 vTaskDelay(WATER_TIME_LONG / portTICK_PERIOD_MS);
-            }
+            // }
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

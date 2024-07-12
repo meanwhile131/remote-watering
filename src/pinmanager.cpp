@@ -1,4 +1,4 @@
-#include <ESP32Servo.h>
+#include <iot_servo.h>
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 #include <comms.h>
@@ -11,7 +11,22 @@ static const char *TAG = "Pin manager";
 bool lastButtonState[8];
 bool on[10];
 TaskHandle_t turnOffTaskHandles[8];
-Servo water;
+servo_config_t servo_cfg = {
+	.max_angle = 180,
+	.min_width_us = 544,
+	.max_width_us = 2500,
+	.freq = 50,
+	.timer_number = LEDC_TIMER_0,
+	.channels = {
+		.servo_pin = {
+			GPIO_NUM_13,
+		},
+		.ch = {
+			LEDC_CHANNEL_0,
+		},
+	},
+	.channel_number = 1,
+};
 Preferences savedPinState;
 
 void runPins(void *)
@@ -31,7 +46,6 @@ void runPins(void *)
 	ESP_ERROR_CHECK(gpio_config(&gpio_conf));
 
 	setPinState(8, savedPinState.getBool("auto"));
-	water.attach(13);
 	setPinState(9, savedPinState.getBool("water"));
 	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
 	for (;;)
@@ -80,8 +94,10 @@ void setPinState(int pin, bool state)
 	}
 	else if (pin == 9)
 	{
+		iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
+		iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, state ? 180 : 40);
 		savedPinState.putBool("water", state);
-		xTaskCreate(setWaterState, "setWaterState", ESP_TASK_MAIN_STACK, (void *)state, tskIDLE_PRIORITY + 1, NULL);
+		xTaskCreate(releaseWaterServo, "releaseServo", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
 	}
 	JsonDocument message;
 	message[String(pin)] = state;
@@ -95,12 +111,10 @@ void turnOffAfterTime(void *pin)
 	vTaskDelete(NULL);
 }
 
-void setWaterState(void *state)
+void releaseWaterServo(void *)
 {
-	on[9] = (bool)state;
-	water.write((bool)state ? 180 : 40);
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
-	water.release();
+	iot_servo_deinit(LEDC_LOW_SPEED_MODE);
 	vTaskDelete(NULL);
 }
 
