@@ -19,25 +19,33 @@ void runPins(void *)
 	ESP_LOGI(TAG, "Setting up flash memory...");
 	savedPinState.begin("state");
 	ESP_LOGI(TAG, "Setting up pins...");
-	pinMode(16, OUTPUT);
-	pinMode(17, OUTPUT);
-	pinMode(18, OUTPUT);
-	pinMode(19, OUTPUT);
-	pinMode(21, OUTPUT);
-	pinMode(22, OUTPUT);
-	pinMode(23, OUTPUT);
-	pinMode(25, OUTPUT);
-	pinMode(26, INPUT_PULLDOWN);
-	pinMode(27, INPUT_PULLDOWN);
-	pinMode(32, INPUT_PULLDOWN);
-	pinMode(33, INPUT_PULLDOWN);
-	pinMode(34, INPUT);
-	pinMode(35, INPUT);
-	pinMode(36, INPUT);
-	pinMode(39, INPUT);
-	pinMode(4, OUTPUT);
+	gpio_set_direction(16, GPIO_MODE_OUTPUT);
+	gpio_set_direction(17, GPIO_MODE_OUTPUT);
+	gpio_set_direction(18, GPIO_MODE_OUTPUT);
+	gpio_set_direction(19, GPIO_MODE_OUTPUT);
+	gpio_set_direction(21, GPIO_MODE_OUTPUT);
+	gpio_set_direction(22, GPIO_MODE_OUTPUT);
+	gpio_set_direction(23, GPIO_MODE_OUTPUT);
+	gpio_set_direction(25, GPIO_MODE_OUTPUT);
+	gpio_set_direction(4, GPIO_MODE_OUTPUT);
+
+	gpio_set_direction(26, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(26, GPIO_PULLDOWN_ENABLE);
+	gpio_set_direction(27, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(27, GPIO_PULLDOWN_ENABLE);
+	gpio_set_direction(32, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(32, GPIO_PULLDOWN_ENABLE);
+	gpio_set_direction(33, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(33, GPIO_PULLDOWN_ENABLE);
+
+	gpio_set_direction(34, GPIO_MODE_INPUT);
+	gpio_set_direction(35, GPIO_MODE_INPUT);
+	gpio_set_direction(36, GPIO_MODE_INPUT);
+	gpio_set_direction(39, GPIO_MODE_INPUT);
+
 	setPinState(8, savedPinState.getBool("auto"));
-	water.attach(13);
+	// water.attach(13);
+
 	setPinState(9, savedPinState.getBool("water"));
 	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
 	for (;;)
@@ -60,17 +68,17 @@ void setPinState(int pin, bool state)
 	on[pin] = state;
 	if (pin < 8)
 	{
-		digitalWrite(pin == 0	? 17
-					 : pin == 1 ? 25
-					 : pin == 2 ? 19
-					 : pin == 3 ? 21
-					 : pin == 4 ? 22
-					 : pin == 5 ? 23
-					 : pin == 6 ? 18
-					 : pin == 7 ? 16
-								: -1,
-					 on[pin]);
-		digitalWrite(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
+		gpio_set_level(pin == 0	  ? 17
+					   : pin == 1 ? 25
+					   : pin == 2 ? 19
+					   : pin == 3 ? 21
+					   : pin == 4 ? 22
+					   : pin == 5 ? 23
+					   : pin == 6 ? 18
+					   : pin == 7 ? 16
+								  : -1,
+					   on[pin]);
+		gpio_set_level(4, on[0] || on[1] || on[2] || on[3] || on[4] || on[5] || on[6] || on[7]);
 		if (state)
 		{
 			xTaskCreate(turnOffAfterTime, "pinTurnOff", ESP_TASK_MAIN_STACK, (void *)pin, tskIDLE_PRIORITY + 1, NULL);
@@ -93,7 +101,8 @@ void setPinState(int pin, bool state)
 void turnOffAfterTime(void *pin)
 {
 	delay((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG);
-	setPinState((int)pin, 0);
+	if (on[pin])
+		setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
 

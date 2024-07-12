@@ -42,7 +42,6 @@ extern "C" void app_main()
                                         NULL);
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
-    esp_wifi_connect();
     ESP_LOGI(TAG, "Starting autowatering...");
     xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
     ESP_LOGI(TAG, "Starting comms...");
