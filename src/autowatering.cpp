@@ -1,21 +1,28 @@
 #include <Arduino.h>
 #include <pinmanager.h>
 #include <autowatering.h>
+#include <esp_sntp.h>
 
 static const char *TAG = "Autowatering";
 
 void runAutoWatering(void *)
 {
     ESP_LOGI(TAG, "Setting up NTP...");
-    configTime(14400, 0, "pool.ntp.org");
+    setenv("TZ", "UTC+4", 1);
+    tzset();
+    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_init();
     ESP_LOGI(TAG, "NTP setup done! Starting loop...");
     for (;;)
     {
         if (on[8])
         {
-            struct tm timeInfo;
-            getLocalTime(&timeInfo);
-            if (timeInfo.tm_hour == 23 && timeInfo.tm_min == 0)
+            time_t now;
+            struct tm timeinfo;
+            time(&now);
+            localtime_r(&now, &timeinfo);
+            if (timeinfo.tm_hour == 23 && timeinfo.tm_min == 0)
             {
                 setPinState(0, 1);
                 vTaskDelay(WATER_TIME / portTICK_PERIOD_MS);

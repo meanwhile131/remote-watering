@@ -30,8 +30,7 @@ void runPins(void *)
 	ESP_ERROR_CHECK(gpio_config(&gpio_conf));
 
 	setPinState(8, savedPinState.getBool("auto"));
-	// water.attach(13);
-
+	water.attach(13);
 	setPinState(9, savedPinState.getBool("water"));
 	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
 	for (;;)

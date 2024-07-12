@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 #include <comms.h>
@@ -6,12 +5,13 @@
 #include <string>
 #include <esp_ota_ops.h>
 #include <esp_https_ota.h>
+
 static const char *TAG = "Comms";
 httpd_handle_t server = NULL;
 
 void runComms()
 {
-	ESP_LOGI(TAG, "Initializing web server... (new)");
+	ESP_LOGI(TAG, "Initializing web server...");
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 	ESP_LOGI(TAG, "Starting server on port %d", config.server_port);
 	ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -22,13 +22,19 @@ void runComms()
 		.handler = websocket_handler,
 		.user_ctx = NULL,
 		.is_websocket = true};
-	static const httpd_uri_t ota_post = {
+	static const httpd_uri_t ota = {
 		.uri = "/ota",
 		.method = HTTP_POST,
 		.handler = ota_handler,
 		.user_ctx = NULL};
+	static const httpd_uri_t running_partition = {
+		.uri = "/ota",
+		.method = HTTP_GET,
+		.handler = running_partition_handler,
+		.user_ctx = NULL};
 	httpd_register_uri_handler(server, &ws);
-	httpd_register_uri_handler(server, &ota_post);
+	httpd_register_uri_handler(server, &ota);
+	httpd_register_uri_handler(server, &running_partition);
 	ESP_LOGI(TAG, "Web server init done!");
 
 	const esp_partition_t *running = esp_ota_get_running_partition();
@@ -100,17 +106,17 @@ esp_err_t ota_handler(httpd_req_t *req)
 	esp_ota_handle_t update_handle = NULL;
 	const esp_partition_t *update_partition = esp_ota_get_next_update_partition(NULL);
 
+	char response[64];
 	if (update_partition == NULL)
 	{
-		httpd_resp_send(req, "No ota partition!", 18);
+		httpd_resp_send(req, "No OTA partition!\n", -1);
 		return ESP_FAIL;
 	}
 
 	if ((ret = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle)) != ESP_OK)
 	{
-		char response[64];
-		int len = sprintf(response, "Error starting OTA: %s", esp_err_to_name(ret));
-		httpd_resp_send(req, response, 0);
+		int len = sprintf(response, "Error starting OTA: %s\n", esp_err_to_name(ret));
+		httpd_resp_send(req, response, len);
 		return ESP_FAIL;
 	}
 	while (remaining > 0)
@@ -118,9 +124,8 @@ esp_err_t ota_handler(httpd_req_t *req)
 		if ((ret = httpd_req_recv(req, buf, min((unsigned int)remaining, sizeof(buf)))) <= 0)
 		{
 			esp_ota_abort(update_handle);
-			char response[64];
-			int len = sprintf(response, "Error recieving OTA: %s", esp_err_to_name(ret));
-			httpd_resp_send(req, response, 0);
+			int len = sprintf(response, "Error recieving OTA: %s\n", esp_err_to_name(ret));
+			httpd_resp_send(req, response, len);
 			return ESP_FAIL;
 		}
 		size_t bytes_read = ret;
@@ -128,29 +133,28 @@ esp_err_t ota_handler(httpd_req_t *req)
 		remaining -= bytes_read;
 		if ((ret = esp_ota_write(update_handle, buf, bytes_read)) != ESP_OK)
 		{
-			char response[64];
-			int len = sprintf(response, "Error writing OTA: %s", esp_err_to_name(ret));
-			httpd_resp_send(req, response, 0);
+			esp_ota_abort(update_handle);
+			int len = sprintf(response, "Error writing OTA: %s\n", esp_err_to_name(ret));
+			httpd_resp_send(req, response, len);
 			return ESP_FAIL;
 		}
 	}
 
 	if ((ret = esp_ota_end(update_handle)) != ESP_OK)
 	{
-		char response[64];
-		int len = sprintf(response, "Error ending OTA: %s", esp_err_to_name(ret));
-		httpd_resp_send(req, response, 0);
+		int len = sprintf(response, "Error ending OTA: %s\n", esp_err_to_name(ret));
+		httpd_resp_send(req, response, len);
 		return ESP_FAIL;
 	}
 	if ((ret = esp_ota_set_boot_partition(update_partition)) != ESP_OK)
 	{
-		char response[64];
-		int len = sprintf(response, "Error setting boot partition: %s", esp_err_to_name(ret));
-		httpd_resp_send(req, response, 0);
+		int len = sprintf(response, "Error setting boot partition: %s\n", esp_err_to_name(ret));
+		httpd_resp_send(req, response, len);
 		return ESP_FAIL;
 	}
 	httpd_resp_set_status(req, HTTPD_200);
-	httpd_resp_send(req, NULL, 0);
+	int len = sprintf(response, "OTA done! New boot partition: %s\n", update_partition->label);
+	httpd_resp_send(req, response, len);
 
 	vTaskDelay(2000 / portTICK_RATE_MS);
 	esp_restart();
@@ -158,11 +162,26 @@ esp_err_t ota_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
+esp_err_t running_partition_handler(httpd_req_t *req)
+{
+	char response[64];
+	const esp_partition_t *running_partition = esp_ota_get_running_partition();
+	if (running_partition == NULL)
+	{
+		httpd_resp_set_status(req, HTTPD_500);
+		httpd_resp_send(req, "Can't find running partition!", -1);
+		return ESP_FAIL;
+	}
+	int len = sprintf(response, "Running partition: %s\n", running_partition->label);
+	httpd_resp_send(req, response, len);
+	return ESP_OK;
+}
+
 void textAll(JsonDocument message)
 {
 	if (server == NULL)
 	{
-		ESP_LOGE(TAG, "Tried to send message before server initialized.");
+		ESP_LOGW(TAG, "Tried to send message before server initialized.");
 		return;
 	}
 	std::string msg;
