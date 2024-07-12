@@ -91,6 +91,7 @@ void setPinState(int pin, bool state)
 void turnOffAfterTime(void *pin)
 {
 	vTaskDelay(((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG) / portTICK_PERIOD_MS);
+	turnOffTaskHandles[(int)pin] = NULL;
 	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
