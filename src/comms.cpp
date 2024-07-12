@@ -11,10 +11,9 @@ httpd_handle_t server = NULL;
 
 void runComms()
 {
-	ESP_LOGI(TAG, "Initializing web server... (this is the new app)");
+	ESP_LOGI(TAG, "Initializing web server... (new)");
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
-	ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+	ESP_LOGI(TAG, "Starting server on port %d", config.server_port);
 	ESP_ERROR_CHECK(httpd_start(&server, &config));
 	ESP_LOGI(TAG, "Registering URI handlers");
 	static const httpd_uri_t ws = {
@@ -26,11 +25,21 @@ void runComms()
 	static const httpd_uri_t ota_post = {
 		.uri = "/ota",
 		.method = HTTP_POST,
-		.handler = ota_post_handler,
+		.handler = ota_handler,
 		.user_ctx = NULL};
 	httpd_register_uri_handler(server, &ws);
 	httpd_register_uri_handler(server, &ota_post);
 	ESP_LOGI(TAG, "Web server init done!");
+
+	const esp_partition_t *running = esp_ota_get_running_partition();
+	esp_ota_img_states_t ota_state;
+	if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK)
+	{
+		if (ota_state == ESP_OTA_IMG_PENDING_VERIFY)
+		{
+			esp_ota_mark_app_valid_cancel_rollback();
+		}
+	}
 }
 
 esp_err_t websocket_handler(httpd_req_t *req)
@@ -67,7 +76,6 @@ esp_err_t websocket_handler(httpd_req_t *req)
 		}
 		ws_pkt.payload = buf;
 		ESP_ERROR_CHECK(httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len));
-		ESP_LOGI(TAG, "Recieved %s", ws_pkt.payload);
 		if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
 		{
 			JsonDocument message;
@@ -83,53 +91,64 @@ esp_err_t websocket_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
-esp_err_t ota_post_handler(httpd_req_t *req)
+esp_err_t ota_handler(httpd_req_t *req)
 {
 	char buf[256];
-	httpd_resp_set_status(req, HTTPD_500); // Assume failure
+	httpd_resp_set_status(req, HTTPD_500);
 
 	int ret, remaining = req->content_len;
-	ESP_LOGI(TAG, "Getting OTA update... (this is the new app)");
-
-	esp_ota_handle_t update_handle = 0;
+	esp_ota_handle_t update_handle = NULL;
 	const esp_partition_t *update_partition = esp_ota_get_next_update_partition(NULL);
-	const esp_partition_t *running = esp_ota_get_running_partition();
 
 	if (update_partition == NULL)
 	{
-		ESP_LOGE(TAG, "No ota partition!");
-		esp_ota_abort(update_handle);
-		httpd_resp_send(req, NULL, 0);
+		httpd_resp_send(req, "No ota partition!", 18);
 		return ESP_FAIL;
 	}
 
-	ESP_LOGI(TAG, "Writing partition: type %d, subtype %d, offset 0x%08x", update_partition->type, update_partition->subtype, update_partition->address);
-	ESP_LOGI(TAG, "Running partition: type %d, subtype %d, offset 0x%08x", running->type, running->subtype, running->address);
-	ESP_ERROR_CHECK(esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle));
+	if ((ret = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle)) != ESP_OK)
+	{
+		char response[64];
+		int len = sprintf(response, "Error starting OTA: %s", esp_err_to_name(ret));
+		httpd_resp_send(req, response, 0);
+		return ESP_FAIL;
+	}
 	while (remaining > 0)
 	{
 		if ((ret = httpd_req_recv(req, buf, min((unsigned int)remaining, sizeof(buf)))) <= 0)
 		{
-			if (ret == HTTPD_SOCK_ERR_TIMEOUT)
-			{
-				continue;
-			}
 			esp_ota_abort(update_handle);
-			httpd_resp_send(req, NULL, 0);
+			char response[64];
+			int len = sprintf(response, "Error recieving OTA: %s", esp_err_to_name(ret));
+			httpd_resp_send(req, response, 0);
 			return ESP_FAIL;
 		}
 		size_t bytes_read = ret;
 
 		remaining -= bytes_read;
-		ESP_LOGI(TAG, "Recieving OTA: %i", remaining);
-		ESP_ERROR_CHECK(esp_ota_write(update_handle, buf, bytes_read));
+		if ((ret = esp_ota_write(update_handle, buf, bytes_read)) != ESP_OK)
+		{
+			char response[64];
+			int len = sprintf(response, "Error writing OTA: %s", esp_err_to_name(ret));
+			httpd_resp_send(req, response, 0);
+			return ESP_FAIL;
+		}
 	}
 
-	ESP_LOGI(TAG, "Gettting OTA update done");
-	ESP_ERROR_CHECK(esp_ota_end(update_handle));
-	ESP_ERROR_CHECK(esp_ota_set_boot_partition(update_partition));
-	ESP_LOGI(TAG, "OTA Success! Rebooting...");
-
+	if ((ret = esp_ota_end(update_handle)) != ESP_OK)
+	{
+		char response[64];
+		int len = sprintf(response, "Error ending OTA: %s", esp_err_to_name(ret));
+		httpd_resp_send(req, response, 0);
+		return ESP_FAIL;
+	}
+	if ((ret = esp_ota_set_boot_partition(update_partition)) != ESP_OK)
+	{
+		char response[64];
+		int len = sprintf(response, "Error setting boot partition: %s", esp_err_to_name(ret));
+		httpd_resp_send(req, response, 0);
+		return ESP_FAIL;
+	}
 	httpd_resp_set_status(req, HTTPD_200);
 	httpd_resp_send(req, NULL, 0);
 
