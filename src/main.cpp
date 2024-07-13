@@ -19,7 +19,14 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 
 extern "C" void app_main()
 {
-    nvs_flash_init();
+    ESP_LOGI(TAG, "Initializing NVS...");
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
     ESP_LOGI(TAG, "Starting pin manager...");
     xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
     ESP_LOGI(TAG, "Setting up WiFi...");
@@ -28,7 +35,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
     wifi_init_config_t init_wifi_config = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&init_wifi_config);
+    ESP_ERROR_CHECK(esp_wifi_init(&init_wifi_config));
     wifi_config_t wifi_config = {
         .sta = {
             {.ssid = "H1"},

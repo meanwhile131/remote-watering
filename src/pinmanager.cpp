@@ -2,7 +2,6 @@
 #include <ArduinoJson.h>
 #include <pinmanager.h>
 #include <comms.h>
-#include <Preferences.h>
 #include <esp_task.h>
 #include <nvs_flash.h>
 
@@ -14,7 +13,7 @@ TaskHandle_t turnOffTaskHandles[8];
 servo_config_t servo_cfg = {
 	.max_angle = 180,
 	.min_width_us = 544,
-	.max_width_us = 2500,
+	.max_width_us = 2400,
 	.freq = 50,
 	.timer_number = LEDC_TIMER_0,
 	.channels = {
@@ -27,12 +26,12 @@ servo_config_t servo_cfg = {
 	},
 	.channel_number = 1,
 };
-Preferences savedPinState;
+nvs_handle_t nvs;
 
 void runPins(void *)
 {
-	ESP_LOGI(TAG, "Setting up flash memory...");
-	savedPinState.begin("state");
+	ESP_LOGI(TAG, "Opening NVS namespace...");
+	ESP_ERROR_CHECK(nvs_open("state", NVS_READWRITE, &nvs));
 	ESP_LOGI(TAG, "Setting up pins...");
 	gpio_config_t gpio_conf = {};
 
@@ -45,9 +44,14 @@ void runPins(void *)
 	gpio_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
 	ESP_ERROR_CHECK(gpio_config(&gpio_conf));
 
-	setPinState(8, savedPinState.getBool("auto"));
-	setPinState(9, savedPinState.getBool("water"));
-	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
+	ESP_LOGI(TAG, "Reading pin states from NVS...");
+	uint8_t autoState, waterState;
+	nvs_get_u8(nvs, "auto", &autoState);
+	setPinState(8, autoState);
+	nvs_get_u8(nvs, "water", &waterState);
+	setPinState(9, waterState);
+
+	ESP_LOGI(TAG, "Init done! Starting button handler!");
 
 	for (;;)
 	{
@@ -91,13 +95,15 @@ void setPinState(int pin, bool state)
 	}
 	else if (pin == 8)
 	{
-		savedPinState.putBool("auto", state);
+		nvs_set_u8(nvs, "auto", state);
+		nvs_commit(nvs);
 	}
 	else if (pin == 9)
 	{
-		iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
-		iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, state ? 180 : 40);
-		savedPinState.putBool("water", state);
+		nvs_set_u8(nvs, "water", state);
+		nvs_commit(nvs);
+		ESP_ERROR_CHECK_WITHOUT_ABORT(iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg));
+		ESP_ERROR_CHECK_WITHOUT_ABORT(iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, state ? 180 : 40));
 		xTaskCreate(releaseWaterServo, "releaseServo", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
 	}
 	JsonDocument message;
@@ -116,7 +122,7 @@ void turnOffAfterTime(void *pin)
 void releaseWaterServo(void *)
 {
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
-	iot_servo_deinit(LEDC_LOW_SPEED_MODE);
+	ESP_ERROR_CHECK_WITHOUT_ABORT(iot_servo_deinit(LEDC_LOW_SPEED_MODE));
 	vTaskDelete(NULL);
 }
 
