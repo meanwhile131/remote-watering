@@ -34,6 +34,7 @@ void runPins(void *)
 	water.attach(13);
 	setPinState(9, savedPinState.getBool("water"));
 	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
+
 	for (;;)
 	{
 		buttonPressHandler(GPIO_NUM_26, 7);

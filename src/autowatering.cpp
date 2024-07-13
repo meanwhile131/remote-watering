@@ -8,7 +8,7 @@ static const char *TAG = "Autowatering";
 void runAutoWatering(void *)
 {
     ESP_LOGI(TAG, "Setting up NTP...");
-    setenv("TZ", "UTC+4", 1);
+    setenv("TZ", "UTC-4", 1);
     tzset();
     esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, "pool.ntp.org");
