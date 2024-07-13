@@ -115,6 +115,7 @@ esp_err_t ota_handler(httpd_req_t *req)
 
 	if ((ret = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle)) != ESP_OK)
 	{
+		esp_ota_abort(update_handle);
 		int len = sprintf(response, "Error starting OTA: %s\n", esp_err_to_name(ret));
 		httpd_resp_send(req, response, len);
 		return ESP_FAIL;
@@ -142,6 +143,7 @@ esp_err_t ota_handler(httpd_req_t *req)
 
 	if ((ret = esp_ota_end(update_handle)) != ESP_OK)
 	{
+		esp_ota_abort(update_handle);
 		int len = sprintf(response, "Error ending OTA: %s\n", esp_err_to_name(ret));
 		httpd_resp_send(req, response, len);
 		return ESP_FAIL;

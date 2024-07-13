@@ -48,6 +48,7 @@ void runPins(void *)
 	setPinState(8, savedPinState.getBool("auto"));
 	setPinState(9, savedPinState.getBool("water"));
 	ESP_LOGI(TAG, "Pin init done! Starting button handler!");
+
 	for (;;)
 	{
 		buttonPressHandler(GPIO_NUM_26, 7);
@@ -107,6 +108,7 @@ void setPinState(int pin, bool state)
 void turnOffAfterTime(void *pin)
 {
 	vTaskDelay(((int)pin != 1 ? WATER_TIME : WATER_TIME_LONG) / portTICK_PERIOD_MS);
+	turnOffTaskHandles[(int)pin] = NULL;
 	setPinState((int)pin, 0);
 	vTaskDelete(NULL);
 }
