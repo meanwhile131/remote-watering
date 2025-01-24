@@ -38,7 +38,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(esp_wifi_init(&init_wifi_config));
     wifi_config_t wifi_config = {
         .sta = {
-            {.ssid = "H1"},
+            {.ssid = "H"},
             {.password = "qazwsxedc"},
         },
     };

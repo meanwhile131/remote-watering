@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-curl --data-binary @.pio/build/esp32doit-devkit-v1/firmware.bin 192.168.2.2/ota | tee /dev/null
+curl --data-binary @.pio/build/esp32doit-devkit-v1/firmware.bin 192.168.1.201/ota | tee /dev/null
