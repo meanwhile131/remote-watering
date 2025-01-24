@@ -1,5 +1,5 @@
 #define MINUTE 60 * 1000
-#define WATER_TIME 2 * MINUTE
+#define WATER_TIME 4 * MINUTE
 #define WATER_TIME_LONG 10 * MINUTE
 #include <driver/gpio.h>
 
