@@ -5,6 +5,7 @@
 #include <string>
 #include <esp_ota_ops.h>
 #include <esp_https_ota.h>
+#include <esp_log.h>
 
 static const char *TAG = "Comms";
 httpd_handle_t server = NULL;
@@ -88,8 +89,8 @@ esp_err_t websocket_handler(httpd_req_t *req)
 			deserializeJson(message, ws_pkt.payload);
 			for (size_t i = 0; i < 10; i++)
 			{
-				if (message.containsKey(String(i)))
-					setPinState(i, message[String(i)]);
+				if (message.containsKey(std::to_string(i)))
+					setPinState(i, message[std::to_string(i)]);
 			}
 		}
 	}
@@ -122,7 +123,7 @@ esp_err_t ota_handler(httpd_req_t *req)
 	}
 	while (remaining > 0)
 	{
-		if ((ret = httpd_req_recv(req, buf, min((unsigned int)remaining, sizeof(buf)))) <= 0)
+		if ((ret = httpd_req_recv(req, buf, std::min((unsigned int)remaining, sizeof(buf)))) <= 0)
 		{
 			esp_ota_abort(update_handle);
 			int len = sprintf(response, "Error recieving OTA: %s\n", esp_err_to_name(ret));
@@ -158,7 +159,7 @@ esp_err_t ota_handler(httpd_req_t *req)
 	int len = sprintf(response, "OTA done! New boot partition: %s\n", update_partition->label);
 	httpd_resp_send(req, response, len);
 
-	vTaskDelay(2000 / portTICK_RATE_MS);
+	vTaskDelay(2000 / portTICK_PERIOD_MS);
 	esp_restart();
 
 	return ESP_OK;

@@ -4,6 +4,7 @@
 #include <comms.h>
 #include <esp_task.h>
 #include <nvs_flash.h>
+#include <esp_log.h>
 
 static const char *TAG = "Pin manager";
 
@@ -107,7 +108,7 @@ void setPinState(int pin, bool state)
 		xTaskCreate(releaseWaterServo, "releaseServo", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
 	}
 	JsonDocument message;
-	message[String(pin)] = state;
+	message[std::to_string(pin)] = state;
 	textAll(message);
 }
 

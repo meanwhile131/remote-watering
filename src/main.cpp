@@ -3,8 +3,8 @@
 #include <autowatering.h>
 #include <esp_wifi.h>
 #include <esp_netif.h>
-#include <Print.h>
 #include <nvs_flash.h>
+#include <esp_log.h>
 
 static const char *TAG = "Main";
 
@@ -28,7 +28,7 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(err);
     ESP_LOGI(TAG, "Starting pin manager...");
-    xTaskCreate(runPins, "Pin manager", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(runPins, "Pin manager", 4096, NULL, tskIDLE_PRIORITY + 1, NULL);
     ESP_LOGI(TAG, "Setting up WiFi...");
     esp_wifi_set_storage(WIFI_STORAGE_RAM);
     ESP_ERROR_CHECK(esp_netif_init());
@@ -36,12 +36,9 @@ extern "C" void app_main()
     esp_netif_create_default_wifi_sta();
     wifi_init_config_t init_wifi_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&init_wifi_config));
-    wifi_config_t wifi_config = {
-        .sta = {
-            {.ssid = "H"},
-            {.password = "qazwsxedc"},
-        },
-    };
+    wifi_config_t wifi_config = {};
+    strlcpy((char *)wifi_config.sta.ssid, "H", 32);
+    strlcpy((char *)wifi_config.sta.password, "qazwsxedc", 64);
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
                                                         ESP_EVENT_ANY_ID,
                                                         &event_handler,
@@ -51,7 +48,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_connect());
     ESP_LOGI(TAG, "Starting autowatering...");
-    xTaskCreate(runAutoWatering, "Autowatering", ESP_TASK_MAIN_STACK, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(runAutoWatering, "Autowatering", 2048, NULL, tskIDLE_PRIORITY + 1, NULL);
     ESP_LOGI(TAG, "Starting comms...");
     runComms();
 }

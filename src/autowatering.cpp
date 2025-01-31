@@ -1,7 +1,7 @@
-#include <Arduino.h>
 #include <pinmanager.h>
 #include <autowatering.h>
 #include <esp_sntp.h>
+#include <esp_log.h>
 
 static const char *TAG = "Autowatering";
 
